@@ -5,13 +5,6 @@ from configparser import ConfigParser
 
 DEFAULT_DATA_PATH = "~/.tac1"
 
-NOTE_CONTENT_TPL = \
-"""
-[title]: {TITLE}
-[tags]: {TAG_LIST}
-
-{CONTENT}
-"""
 
 class TempDict(dict):
     def __missing__(self, key):
@@ -33,31 +26,26 @@ class Notebook():
         print(self.notes)
                 
 
+NOTE_CONTENT_TPL = \
+"""[title]: {TITLE}
+[tags]: {TAG_LIST}
+
+{CONTENT}
+"""
 class Note():
-    """
-    [title]: The title of the note
-    [tags]: tag1 tag2
 
-    The content of the note
-    """
-
-    NOTE_CONTENT_TPL = \
-    """
-    [title]: {TITLE}
-    [tags]: {TAG_LIST}
-
-    {CONTENT}
-    """
+    
 
     def __init__(self, path):
         self.title = ""
         self.tags = list()
         self.content = ""
+        print(path)
         with open(path, "r") as fr:
-            content = fr.read()
+            content = fr.readlines()
             if len(content) > 2:
-                self.title = content[0].replace("[title]: ", "")
-                self.tags = content[1].replace("[tags]: ", "").split(" ")
+                self.title = content[0].replace("[title]: ", "").replace("\n", "")
+                self.tags = content[1].replace("[tags]: ", "").replace("\n", "").split(" ")
                 self.content = content[2:]
 
     @classmethod

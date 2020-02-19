@@ -12,3 +12,4 @@ def test_notebook():
             fw.write(Note.format_note(str(i), "A B C D", "TEST_NOTE"))
     
     nb = Notebook(temp_folder)
+    assert "B" in nb.notes["1"].tags
