@@ -22,6 +22,7 @@ def format_tpl(tpl, data):
 class Notebook():
 
     def __init__(self, path=DEFAULT_DATA_PATH):
+        self.current_id = None
         self.notes = dict()
         os.makedirs(path, exist_ok=True)
         for root, dirs, files in os.walk(path):
@@ -30,6 +31,7 @@ class Notebook():
                 n = Note(note_path)
                 self.notes[n.title] = n
         print(self.notes.keys())
+
                 
 
 NOTE_CONTENT_TPL = \
@@ -133,8 +135,8 @@ class ListView(Frame):
         # Create the form for displaying the list of contacts.
         self._list_view = ListBox(
             Widget.FILL_FRAME,
-            [(x["name"], i) for i,x in enumerate(self._model.notes)],
-            name="contacts",
+            [(k, v) for k,v in self._model.notes.items()],
+            name="notes",
             add_scroll_bar=True,
             on_change=self._on_pick,
             on_select=self._edit)
@@ -158,21 +160,21 @@ class ListView(Frame):
         self._delete_button.disabled = self._list_view.value is None
 
     def _reload_list(self, new_value=None):
-        self._list_view.options = [(x["name"], i) for i,x in enumerate(self._model.contacts)]
+        self._list_view.options = [(k, v) for k,v in self._model.notes.items()]
         self._list_view.value = new_value
 
     def _add(self):
         self._model.current_id = None
-        raise NextScene("Edit Contact")
+        raise NextScene("Edit Note")
 
     def _edit(self):
         self.save()
-        self._model.current_id = self.data["contacts"]
-        raise NextScene("Edit Contact")
+        self._model.current_id = self.data["notes"]
+        raise NextScene("Edit Note")
 
     def _delete(self):
         self.save()
-        del self._model.contacts[self.data["contacts"]]
+        del self._model.notes[self.data["notes"]]
         self._reload_list()
 
     @staticmethod
@@ -195,10 +197,7 @@ class NoteView(Frame):
         # Create the form for displaying the list of contacts.
         layout = Layout([100], fill_frame=True)
         self.add_layout(layout)
-        layout.add_widget(Text("Name:", "name"))
-        layout.add_widget(Text("Address:", "address"))
-        layout.add_widget(Text("Phone number:", "phone"))
-        layout.add_widget(Text("Email address:", "email"))
+        layout.add_widget(Text("Title:", "title"))
         layout.add_widget(TextBox(
             Widget.FILL_FRAME, "Notes:", "notes", as_string=True, line_wrap=True))
         layout2 = Layout([1, 1, 1, 1])
@@ -211,14 +210,14 @@ class NoteView(Frame):
         # Do standard reset to clear out form, then populate with new data.
         super(NoteView, self).reset()
         if self._model.current_id is None:
-            self.data = {"name": "", "address": "", "phone": "", "email": "", "notes": ""}
+            self.data = {"name": "", "notes": ""}
         else:
-            self.data = self._model.contacts[self._model.current_id]
+            self.data = self._model.notes[self._model.current_id]
 
     def _ok(self):
         self.save()
         if self._model.current_id is None:
-            self._model.contacts.append(self.data)
+            self._model.contacts[]
         else:
             self._model.contacts[self._model.current_id] = self.data
         raise NextScene("Main")
