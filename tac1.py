@@ -5,6 +5,7 @@ from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
 import sys
 import os
+import time
 import datetime
 from configparser import ConfigParser
 from collections import namedtuple
@@ -22,6 +23,7 @@ def format_tpl(tpl, data):
 class Notebook():
 
     def __init__(self, path=DEFAULT_DATA_PATH):
+        self._path = path
         self.current_id = None
         self.notes = dict()
         os.makedirs(path, exist_ok=True)
@@ -29,11 +31,29 @@ class Notebook():
             for file in files:
                 note_path = root + os.sep + file
                 n = Note(note_path)
-                self.notes[n.title] = n
+                self.notes[file] = n
         print(self.notes.keys())
 
-                
+    def new_note(self, title, tags, content):
+        file_name = str(time.time())
+        note_path = self._path + os.sep + file_name
+        note = Note(note_path, title, tags, content)
+        note.write()
+        self.notes[file_name] = note
+        return note
 
+    def set_note(self, file_name, title, tags, content):
+        note = self.notes[file_name]
+        note.title = title
+        note.tags = tags
+        note.content = content
+        note.write()
+        return note
+
+    def get_indexed_note_list(self):
+        return [(n.title, k) for k,n in self.notes.items()]
+
+                
 NOTE_CONTENT_TPL = \
 """[title]: {TITLE}
 [tags]: {TAG_LIST}
@@ -45,7 +65,7 @@ class Note():
 
     def __init__(self, path, 
                     title="", 
-                    tags=list(), 
+                    tags="", 
                     content=""):
         self.title = title
         self.tags = tags
@@ -73,7 +93,7 @@ class Note():
             print(content)
             if len(content) > 2:
                 self.title = content[0].replace("[title]: ", "").replace("\n", "")
-                self.tags = content[1].replace("[tags]: ", "").replace("\n", "").split(" ")
+                self.tags = content[1].replace("[tags]: ", "").replace("\n", "")
                 self.time = content[2].replace("[time]: ", "").replace("\n", "")
                 self.content = content[3:]
 
@@ -129,13 +149,14 @@ class ListView(Frame):
                                        hover_focus=True,
                                        can_scroll=False,
                                        title="Note List")
+        self.set_theme("monochrome")
         # Save off the model that accesses the contacts database.
         self._model = model
 
         # Create the form for displaying the list of contacts.
         self._list_view = ListBox(
             Widget.FILL_FRAME,
-            [(k, v) for k,v in self._model.notes.items()],
+            self._model.get_indexed_note_list(),
             name="notes",
             add_scroll_bar=True,
             on_change=self._on_pick,
@@ -160,7 +181,7 @@ class ListView(Frame):
         self._delete_button.disabled = self._list_view.value is None
 
     def _reload_list(self, new_value=None):
-        self._list_view.options = [(k, v) for k,v in self._model.notes.items()]
+        self._list_view.options = self._model.get_indexed_note_list()
         self._list_view.value = new_value
 
     def _add(self):
@@ -191,6 +212,7 @@ class NoteView(Frame):
                                           can_scroll=False,
                                           title="Note Details",
                                           reduce_cpu=True)
+        self.set_theme("monochrome")
         # Save off the model that accesses the contacts database.
         self._model = model
 
@@ -198,8 +220,9 @@ class NoteView(Frame):
         layout = Layout([100], fill_frame=True)
         self.add_layout(layout)
         layout.add_widget(Text("Title:", "title"))
+        layout.add_widget(Text("Tags:", "tags"))
         layout.add_widget(TextBox(
-            Widget.FILL_FRAME, "Notes:", "notes", as_string=True, line_wrap=True))
+            Widget.FILL_FRAME, "Text:", "content", as_string=True, line_wrap=True))
         layout2 = Layout([1, 1, 1, 1])
         self.add_layout(layout2)
         layout2.add_widget(Button("OK", self._ok), 0)
@@ -210,16 +233,21 @@ class NoteView(Frame):
         # Do standard reset to clear out form, then populate with new data.
         super(NoteView, self).reset()
         if self._model.current_id is None:
-            self.data = {"name": "", "notes": ""}
+            self.data = {"title": "", "tags": "", "content": ""}
         else:
-            self.data = self._model.notes[self._model.current_id]
+            print("===> Cicciuzzo")
+            print(self._model.current_id)
+            n = self._model.notes[self._model.current_id]
+            self.data = dict(title=n.title, tags=n.tags, content=n.content)
 
     def _ok(self):
         self.save()
         if self._model.current_id is None:
-            self._model.contacts[]
+            note = self._model.new_note(self.data["title"], 
+                                        self.data["tags"], 
+                                        self.data["content"])
         else:
-            self._model.contacts[self._model.current_id] = self.data
+            self._model.notes[self._model.current_id] = self.data
         raise NextScene("Main")
 
     @staticmethod
@@ -230,7 +258,7 @@ class NoteView(Frame):
 def setup(screen, scene):
     scenes = [
         Scene([ListView(screen, the_notebook)], -1, name="Main"),
-        Scene([NoteView(screen, the_notebook)], -1, name="Edit Contact")
+        Scene([NoteView(screen, the_notebook)], -1, name="Edit Note")
     ]
 
     screen.play(scenes, stop_on_resize=True, start_scene=scene, allow_int=True)
