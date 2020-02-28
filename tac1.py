@@ -12,6 +12,16 @@ from collections import namedtuple
 
 DEFAULT_DATA_PATH = os.path.expanduser("~/.tac1")
 
+DEBUG = True
+
+# global buffering object
+_LOG_BUFFER = sys.stdout if not DEBUG else open("tac1.log", 'wb')
+
+def lprint(msg):
+    """Print to stout and log into file"""
+    if DEBUG:
+        _LOG_BUFFER.write((msg + "\n").encode('UTF-8'))
+        _LOG_BUFFER.flush()
 
 class TempDict(dict):
     def __missing__(self, key):
@@ -32,7 +42,7 @@ class Notebook():
                 note_path = root + os.sep + file
                 n = Note(note_path)
                 self.notes[file] = n
-        print(self.notes.keys())
+        #print(self.notes.keys())
 
     def new_note(self, title, tags, content):
         file_name = str(time.time())
@@ -72,7 +82,7 @@ class Note():
         self.time = ""
         self.content = content
         self._path = path
-        print(self._path)
+        #print(self._path)
         if os.path.exists(self._path):
             self.read()
 
@@ -90,17 +100,20 @@ class Note():
     def read(self):
         with open(self._path, "r") as fr:
             content = fr.readlines()
-            print(content)
+            #print(content)
             if len(content) > 2:
                 self.title = content[0].replace("[title]: ", "").replace("\n", "")
                 self.tags = content[1].replace("[tags]: ", "").replace("\n", "")
                 self.time = content[2].replace("[time]: ", "").replace("\n", "")
-                self.content = content[3:]
+                self.content = "\n".join(content[3:])
 
     def write(self):
         self.time = datetime.datetime.now().strftime("%H:%M %B %d, %Y")
         with open(self._path, "w") as fw:
-            fw.write(self.format_note(self.title, self.tags, self.time, self.content))
+            fw.write(str(self))
+
+    def __str__(self):
+        return self.format_note(self.title, self.tags, self.time, self.content)
 
 
 
@@ -157,7 +170,7 @@ class ListView(Frame):
         self._list_view = ListBox(
             Widget.FILL_FRAME,
             self._model.get_indexed_note_list(),
-            name="notes",
+            name="note",
             add_scroll_bar=True,
             on_change=self._on_pick,
             on_select=self._edit)
@@ -190,12 +203,12 @@ class ListView(Frame):
 
     def _edit(self):
         self.save()
-        self._model.current_id = self.data["notes"]
+        self._model.current_id = self.data["note"]
         raise NextScene("Edit Note")
 
     def _delete(self):
         self.save()
-        del self._model.notes[self.data["notes"]]
+        del self._model.notes[self.data["note"]]
         self._reload_list()
 
     @staticmethod
@@ -233,12 +246,20 @@ class NoteView(Frame):
         # Do standard reset to clear out form, then populate with new data.
         super(NoteView, self).reset()
         if self._model.current_id is None:
-            self.data = {"title": "", "tags": "", "content": ""}
+            self.data = \
+            {
+                "title": "", 
+                "tags": "", 
+                "content": "",
+            }
         else:
-            print("===> Cicciuzzo")
-            print(self._model.current_id)
             n = self._model.notes[self._model.current_id]
-            self.data = dict(title=n.title, tags=n.tags, content=n.content)
+            self.data = \
+            {
+                "title": n.title, 
+                "tags": n.tags, 
+                "content": n.content,
+            }
 
     def _ok(self):
         self.save()
@@ -247,7 +268,11 @@ class NoteView(Frame):
                                         self.data["tags"], 
                                         self.data["content"])
         else:
-            self._model.notes[self._model.current_id] = self.data
+            n = self._model.notes[self._model.current_id]
+            n.title = self.data["title"]
+            n.tags = self.data["tags"]
+            n.content = self.data["content"]
+            n.write()
         raise NextScene("Main")
 
     @staticmethod
