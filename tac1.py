@@ -1,5 +1,5 @@
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
-    Button, TextBox, Widget
+    Button, TextBox, Widget, THEMES
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
@@ -13,6 +13,34 @@ from collections import namedtuple
 DEFAULT_DATA_PATH = os.path.expanduser("~/.tac1")
 
 DEBUG = True
+
+# 3-tuple of (foreground colour, attribute, background colour)
+THEMES["jayz"]= \
+{
+    "background": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "shadow": (Screen.COLOUR_BLUE, None, Screen.COLOUR_BLUE),
+    "disabled": (Screen.COLOUR_BLUE, Screen.A_BOLD, Screen.COLOUR_BLACK),
+    "invalid": (Screen.COLOUR_YELLOW, Screen.A_BOLD, Screen.COLOUR_RED),
+    "label": (Screen.COLOUR_GREEN, Screen.A_BOLD, Screen.COLOUR_BLUE),
+    "borders": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_BLACK),
+    "scroll": (Screen.COLOUR_CYAN, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "title": (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_BLACK),
+    "edit_text": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "focus_edit_text": (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_CYAN),
+    "readonly": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_BLACK),
+    "focus_readonly": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_CYAN),
+    "button": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "focus_button": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_WHITE),
+    "control": (Screen.COLOUR_YELLOW, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "selected_control": (Screen.COLOUR_YELLOW, Screen.A_BOLD, Screen.COLOUR_BLACK),
+    "focus_control": (Screen.COLOUR_YELLOW, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "selected_focus_control": (Screen.COLOUR_BLUE, Screen.A_BOLD, Screen.COLOUR_WHITE),
+    "field": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "selected_field": (Screen.COLOUR_YELLOW, Screen.A_BOLD, Screen.COLOUR_BLACK),
+    "focus_field": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
+    "selected_focus_field": (Screen.COLOUR_BLUE, Screen.A_BOLD, Screen.COLOUR_WHITE),
+}
+
 
 # global buffering object
 _LOG_BUFFER = sys.stdout if not DEBUG else open("tac1.log", 'wb')
@@ -162,7 +190,7 @@ class ListView(Frame):
                                        hover_focus=True,
                                        can_scroll=False,
                                        title="Note List")
-        self.set_theme("monochrome")
+        self.set_theme("jayz")
         # Save off the model that accesses the contacts database.
         self._model = model
 
@@ -174,23 +202,21 @@ class ListView(Frame):
             add_scroll_bar=True,
             on_change=self._on_pick,
             on_select=self._edit)
-        self._edit_button = Button("Edit", self._edit)
-        self._delete_button = Button("Delete", self._delete)
+        self._delete_button = Button("-", self._delete)
         layout = Layout([100], fill_frame=True)
         self.add_layout(layout)
         layout.add_widget(self._list_view)
         layout.add_widget(Divider())
-        layout2 = Layout([1, 1, 1, 1])
+        layout2 = Layout([1, 1, 1])
         self.add_layout(layout2)
-        layout2.add_widget(Button("Add", self._add), 0)
-        layout2.add_widget(self._edit_button, 1)
-        layout2.add_widget(self._delete_button, 2)
-        layout2.add_widget(Button("Quit", self._quit), 3)
+        layout2.add_widget(Button("+", self._add), 0)
+        layout2.add_widget(self._delete_button, 1)
+        layout2.add_widget(Button("X", self._quit), 2)
         self.fix()
         self._on_pick()
 
     def _on_pick(self):
-        self._edit_button.disabled = self._list_view.value is None
+        #self._edit_button.disabled = self._list_view.value is None
         self._delete_button.disabled = self._list_view.value is None
 
     def _reload_list(self, new_value=None):
@@ -225,7 +251,7 @@ class NoteView(Frame):
                                           can_scroll=False,
                                           title="Note Details",
                                           reduce_cpu=True)
-        self.set_theme("monochrome")
+        self.set_theme("jayz")
         # Save off the model that accesses the contacts database.
         self._model = model
 
