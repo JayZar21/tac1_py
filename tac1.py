@@ -21,14 +21,14 @@ THEMES["jayz"]= \
     "shadow": (Screen.COLOUR_BLUE, None, Screen.COLOUR_BLUE),
     "disabled": (Screen.COLOUR_BLUE, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "invalid": (Screen.COLOUR_YELLOW, Screen.A_BOLD, Screen.COLOUR_RED),
-    "label": (Screen.COLOUR_GREEN, Screen.A_BOLD, Screen.COLOUR_BLUE),
+    "label": (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "borders": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "scroll": (Screen.COLOUR_CYAN, Screen.A_NORMAL, Screen.COLOUR_BLACK),
     "title": (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "edit_text": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
-    "focus_edit_text": (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_CYAN),
+    "focus_edit_text": (Screen.COLOUR_WHITE, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "readonly": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_BLACK),
-    "focus_readonly": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_CYAN),
+    "focus_readonly": (Screen.COLOUR_CYAN, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "button": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
     "focus_button": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_WHITE),
     "control": (Screen.COLOUR_YELLOW, Screen.A_NORMAL, Screen.COLOUR_BLACK),
@@ -38,7 +38,7 @@ THEMES["jayz"]= \
     "field": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
     "selected_field": (Screen.COLOUR_YELLOW, Screen.A_BOLD, Screen.COLOUR_BLACK),
     "focus_field": (Screen.COLOUR_WHITE, Screen.A_NORMAL, Screen.COLOUR_BLACK),
-    "selected_focus_field": (Screen.COLOUR_BLUE, Screen.A_BOLD, Screen.COLOUR_WHITE),
+    "selected_focus_field": (Screen.COLOUR_BLACK, Screen.A_BOLD, Screen.COLOUR_WHITE),
 }
 
 
@@ -89,7 +89,7 @@ class Notebook():
         return note
 
     def get_indexed_note_list(self):
-        return [(n.title, k) for k,n in self.notes.items()]
+        return sorted([(n.time + " | " + n.title + " [%s]" % n.tags, k) for k,n in self.notes.items()])
 
                 
 NOTE_CONTENT_TPL = \
@@ -133,10 +133,10 @@ class Note():
                 self.title = content[0].replace("[title]: ", "").replace("\n", "")
                 self.tags = content[1].replace("[tags]: ", "").replace("\n", "")
                 self.time = content[2].replace("[time]: ", "").replace("\n", "")
-                self.content = "\n".join(content[3:])
+                self.content = "".join(content[3:])
 
     def write(self):
-        self.time = datetime.datetime.now().strftime("%H:%M %B %d, %Y")
+        self.time = datetime.datetime.now().strftime("%Y/%m/%d %H:%M")
         with open(self._path, "w") as fw:
             fw.write(str(self))
 
