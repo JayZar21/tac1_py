@@ -1,3 +1,4 @@
+from asciimatics.event import KeyboardEvent
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
     Button, TextBox, Widget, THEMES
 from asciimatics.scene import Scene
@@ -91,12 +92,18 @@ class Notebook():
     def get_indexed_note_list(self):
         return sorted([(n.time + " | " + n.title + " [%s]" % n.tags, k) for k,n in self.notes.items()])
 
+    def delete(self, file_name):
+        if file_name in self.notes:
+            del self.notes[file_name]
+        note_path = self._path + os.sep + file_name 
+        if os.path.exists(note_path):
+            os.remove(note_path)
+
                 
 NOTE_CONTENT_TPL = \
 """[title]: {TITLE}
 [tags]: {TAG_LIST}
 [time]: {TIME}
-
 {CONTENT}
 """
 class Note():
@@ -143,43 +150,7 @@ class Note():
     def __str__(self):
         return self.format_note(self.title, self.tags, self.time, self.content)
 
-
-
-"""
-NOTE_BOOK = Notebook()
-
-class TacApplication(npyscreen.NPSAppManaged):
-    def onStart(self):
-        self.addForm("MAIN", NotesGrid)
-
-class NotesGrid(npyscreen.Form):
-    def create(self):
-        # NOT WORKING WELL
-        #grid = self.add(npyscreen.GridColTitles, relx = 5, rely=5, col_titles = [''])
-        #grid.values = [ (n.time + " | " + n.title,) for n in NOTE_BOOK.notes.values()]
-
-        nb = self.add(npyscreen.BoxTitle, name="TAC1", editable=True)
-        nb.values = [ n.time + " | " + n.title for n in NOTE_BOOK.notes.values()]
-
-
-    def afterEditing(self):
-        self.parentApp.setNextForm(None)
-
-if __name__ == '__main__':
-    app = TacApplication()
-    app.run()"""
-
 #############
-
-"""class ContactModel(object):
-    def __init__(self):
-        # Current contact when editing.
-        self.current_id = None
-
-        # List of dicts, where each dict contains a single contact, containing
-        # name, address, phone, email and notes fields.
-        self.contacts = []"""
-
 
 class ListView(Frame):
     def __init__(self, screen, model):
@@ -234,12 +205,23 @@ class ListView(Frame):
 
     def _delete(self):
         self.save()
-        del self._model.notes[self.data["note"]]
+        self._model.delete(self.data["note"])
         self._reload_list()
 
     @staticmethod
     def _quit():
         raise StopApplication("User pressed quit")
+
+    def process_event(self, event):
+        if isinstance(event, KeyboardEvent):
+            if event.key_code in [ord('x'), ord('X'), Screen.ctrl("c")]:
+                raise StopApplication("User quit")
+            elif event.key_code in [ord('+')]:
+                self._add()
+            elif event.key_code in [ord('-')]:
+                self._delete()
+
+        return super().process_event(event)
 
 
 class NoteView(Frame):
