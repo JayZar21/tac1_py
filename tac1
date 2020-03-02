@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from asciimatics.event import KeyboardEvent
 from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
     Button, TextBox, Widget, THEMES
@@ -14,6 +16,25 @@ from collections import namedtuple
 DEFAULT_DATA_PATH = os.path.expanduser("~/.tac1")
 
 DEBUG = True
+
+class colors:
+    RED = (245, 90, 66)
+    ORANGE = (245, 170, 66)
+    YELLOW = (245, 252, 71)
+    GREEN = (92, 252, 71)
+    BLUE = (71, 177, 252)
+    PURPLE = (189, 71, 252)
+    WHITE = (255, 255, 255)
+
+#def initColorIt():
+#    os.system("cls")
+
+def color(text, rgb):
+    return "\033[38;2;" + str(rgb[0]) + ";" + str(rgb[1]) + ";" + str(rgb[2]) +"m" + text + "\033[0m"
+    
+def background(text, rgb):
+    return "\033[48;2;" + str(rgb[0]) + ";" + str(rgb[1]) + ";" + str(rgb[2]) +"m" + text + "\033[0m"
+
 
 # 3-tuple of (foreground colour, attribute, background colour)
 THEMES["jayz"]= \
@@ -90,6 +111,7 @@ class Notebook():
         return note
 
     def get_indexed_note_list(self):
+        #return sorted([(color(n.time , colors.BLUE) + " | " + n.title + color(" [%s]" % n.tags, colors.ORANGE), k) for k,n in self.notes.items()])
         return sorted([(n.time + " | " + n.title + " [%s]" % n.tags, k) for k,n in self.notes.items()])
 
     def delete(self, file_name):
