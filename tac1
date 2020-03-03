@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
 
+from asciimatics.effects import Print
 from asciimatics.event import KeyboardEvent
-from asciimatics.widgets import Frame, ListBox, Layout, Divider, Text, \
-    Button, TextBox, Widget, THEMES
+from asciimatics.widgets import Frame, ListBox, MultiColumnListBox, Layout, Divider, Text, \
+    Button, TextBox, Widget, PopUpDialog, THEMES
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication
+from asciimatics.renderers import FigletText
 import sys
 import os
 import time
 import datetime
 from configparser import ConfigParser
 from collections import namedtuple
+
+VERSION = "01.00"
 
 DEFAULT_DATA_PATH = os.path.expanduser("~/.tac1")
 
@@ -111,8 +115,8 @@ class Notebook():
         return note
 
     def get_indexed_note_list(self):
-        #return sorted([(color(n.time , colors.BLUE) + " | " + n.title + color(" [%s]" % n.tags, colors.ORANGE), k) for k,n in self.notes.items()])
-        return sorted([(n.time + " | " + n.title + " [%s]" % n.tags, k) for k,n in self.notes.items()])
+        #return sorted([([color(n.time , colors.BLUE), n.title, color(n.tags, colors.ORANGE)], k) for k,n in self.notes.items()])
+        return sorted([([n.time, n.title, n.tags], k) for k,n in self.notes.items()])
 
     def delete(self, file_name):
         if file_name in self.notes:
@@ -188,13 +192,16 @@ class ListView(Frame):
         self._model = model
 
         # Create the form for displaying the list of contacts.
-        self._list_view = ListBox(
+        self._list_view = MultiColumnListBox(
             Widget.FILL_FRAME,
-            self._model.get_indexed_note_list(),
+            columns=["<25%", "<50%", "<25%"],
+            options=self._model.get_indexed_note_list(),
+            titles=["Modified", "Title", "Tags"],
             name="note",
             add_scroll_bar=True,
             on_change=self._on_pick,
             on_select=self._edit)
+
         self._delete_button = Button("-", self._delete)
         layout = Layout([100], fill_frame=True)
         self.add_layout(layout)
@@ -227,8 +234,16 @@ class ListView(Frame):
 
     def _delete(self):
         self.save()
-        self._model.delete(self.data["note"])
-        self._reload_list()
+        self._scene.add_effect(
+            PopUpDialog(self._screen,
+                        "Are you sure?",
+                        ["Yes", "No"],
+                        on_close=self._delete_on_yes))
+
+    def _delete_on_yes(self, selected):
+        if selected == 0:
+            self._model.delete(self.data["note"])
+            self._reload_list()
 
     @staticmethod
     def _quit():
@@ -311,7 +326,16 @@ class NoteView(Frame):
 
 
 def setup(screen, scene):
+    effects = [
+        Print(screen, FigletText("TAC1", font="standard"),
+                y=screen.height//2-3, 
+                stop_frame=50),
+        Print(screen, FigletText(VERSION, font="term"),
+                y=screen.height//2-3, 
+                stop_frame=50),
+    ]
     scenes = [
+        Scene(effects, 0),
         Scene([ListView(screen, the_notebook)], -1, name="Main"),
         Scene([NoteView(screen, the_notebook)], -1, name="Edit Note")
     ]
