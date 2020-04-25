@@ -350,10 +350,16 @@ def setup(screen, scene):
 
 
 the_notebook = Notebook()
-last_scene = None
-while True:
-    try:
-        Screen.wrapper(setup, catch_interrupt=True, arguments=[last_scene])
-        sys.exit(0)
-    except ResizeScreenError as e:
-        last_scene = e.scene
+
+def main():
+    last_scene = None
+    while True:
+        try:
+            Screen.wrapper(setup, catch_interrupt=True, arguments=[last_scene])
+            sys.exit(0)
+        except ResizeScreenError as e:
+            last_scene = e.scene
+
+if __name__ == "__main__":
+    main()
+    
