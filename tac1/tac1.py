@@ -3,7 +3,8 @@
 from asciimatics.effects import Print
 from asciimatics.event import KeyboardEvent
 from asciimatics.widgets import Frame, ListBox, MultiColumnListBox, Layout, Divider, Text, \
-    Button, TextBox, Widget, PopUpDialog, Divider, THEMES
+    Button, TextBox, Widget, PopUpDialog, Divider
+from asciimatics.widgets.utilities import THEMES
 from asciimatics.scene import Scene
 from asciimatics.screen import Screen
 from asciimatics.exceptions import ResizeScreenError, NextScene, StopApplication

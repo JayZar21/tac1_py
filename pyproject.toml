@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "tac1-py"
+version = "0.1.0"
+description = ""
+authors = ["Gianluca Romanin <gianluca.romanin@kronotech.it>"]
+readme = "README.md"
+packages = [{include = "tac1_py"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+asciimatics = "1.14.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
